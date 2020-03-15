@@ -1,10 +1,13 @@
 using System;
 using System.IO;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Mobile.BuildTools.Build;
 using Mobile.BuildTools.Generators;
 using Mobile.BuildTools.Generators.Manifests;
 using Mobile.BuildTools.Logging;
 using Mobile.BuildTools.Tasks.Utils;
+using Xamarin.Android.Tools;
 
 namespace Mobile.BuildTools.Tasks
 {
@@ -12,7 +15,14 @@ namespace Mobile.BuildTools.Tasks
     {
         public string[] ReferenceAssemblyPaths { get; set; }
 
+        [Required]
         public string ManifestPath { get; set; }
+
+        [Required]
+        public string OutputManifestPath { get; set; }
+
+        [Output]
+        public string ProcessedManifest => OutputManifestPath;
 
         internal override void ExecuteInternal(IBuildConfiguration config)
         {
@@ -34,13 +44,16 @@ namespace Mobile.BuildTools.Tasks
                 case Platform.iOS:
                     generator = new TemplatedPlistGenerator(config)
                     {
-                        ManifestOutputPath = ManifestPath
+                        ManifestSourcePath = ManifestPath,
+                        ManifestOutputPath = OutputManifestPath
                     };
                     break;
                 case Platform.Android:
                     generator = new TemplatedAndroidAppManifestGenerator(config, ReferenceAssemblyPaths)
                     {
-                        ManifestOutputPath = ManifestPath
+                        ManifestSourcePath = ManifestPath,
+                        ManifestOutputPath = OutputManifestPath,
+                        AndroidVersions = new AndroidVersions(ReferenceAssemblyPaths)
                     };
                     break;
             }
